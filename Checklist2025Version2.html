@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Robot Pre-Match Checklist</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500&family=Roboto:wght@500&display=swap" rel="stylesheet">
     <style>
@@ -181,9 +181,8 @@
     <script>
         const checklistGroups = {
             "Drive": [
-                " Swerve modules tightened", 
-                " Swerve wheels tightened, ",
-                " Wheels cleared of carpet",
+                " Swerve modules are tightened", 
+                " Swerve wheels are tightened, cleaned of carpet", 
                 " Drive works (Joystick L)", 
                 " Turn works (Joystick R)", 
                 " Drive bolts"
@@ -191,8 +190,7 @@
             "Electrical": [
                 " CANivore CAN bus works", 
                 " RIO CAN bus works", 
-                " RIO is powered, has cover ON",
-                " USB in RIO",
+                " RIO is powered, has cover ON", 
                 " Pigeon, CANivore blink YELLOW", 
                 " CANDI blinks YELLOW", 
                 " All motors blink YELLOW", 
@@ -206,7 +204,7 @@
                 " Ethernet cables attached properly",
                 " PDP Panel bolted in", 
                 " Polycarb cover ziptied in", 
-                " Limelight blinks oscillating up down"
+                " Limelight turns on and blinks (oscillating up down)"
             ],
             "In-N-Outtake": [
                 " Bearings in", 
@@ -216,15 +214,15 @@
                 " Intake tape"
             ],
             "Climber": [
-                " Climber chain tensioned", 
-                " Jam nuts (C)", 
+                " Chain tensioned", 
+                " Jam nuts", 
                 " Gearbox tighten", 
                 " Correct starting orientation"
             ],
             "Elevator": [
                 " Dyneema tensioned", 
-                " Elevator chain tensioned", 
-                " Jam nuts (E)", 
+                " Chain tensioned", 
+                " Jam nuts", 
                 " Chain plate tightened", 
                 " Crossbar is secure and level", 
                 " Stages ascend properly"
@@ -236,15 +234,13 @@
                 " Wifi, Firewall are OFF", 
                 " Both controllers work", 
                 " Turn ON Xbox controllers!", 
-                " Check limelights' settings",
+                " Handles OFF robot", 
                 " Auto selected", 
                 " Preload"
             ],
-            "Auxiliary": [
+            "Auxilliary": [
                 " Bumper Colors", 
-                " Bumpers tightened", 
-                " Zip tie battery", 
-                " Handles OFF robot", 
+                " Bumpers tightened", " Zip tie battery", 
                 " Subsystems are stowed and ready to go", 
                 " Drive Team is excited and ready! :)"
             ]
@@ -310,7 +306,7 @@
 
             const batteryPrompt = document.getElementById('battery-prompt');
             batteryPrompt.style.display = 'block';
-            batteryPrompt.innerHTML = '<p class="battery-prompt">Please enter the battery number:</p><input id="battery-input" type="number" inputmode="numeric"><button onclick="showEndScreen()">Submit</button><button onclick="goBackFromBatteryPrompt()">Back</button>';
+            batteryPrompt.innerHTML = '<p>Please enter the battery number:</p><input id="battery-input" type="text"><button onclick="showEndScreen()">Submit</button><button onclick="goBackFromBatteryPrompt()">Back</button>';
         }
 
         function showEndScreen() {
@@ -413,14 +409,15 @@
             const checklist = document.getElementById('checklist');
             const groupHeader = document.getElementById('group-header');
             const groupItems = checklistGroups[currentGroup];
+            
             groupHeader.textContent = currentGroup;
 
-            let checklistHtml = '';
-            for (let i = 0; i < groupItems.length; i++) {
-                const checkboxChecked = checkedState[currentGroup + '-' + i] ? 'checked' : '';
-                checklistHtml += `<li><input type="checkbox" ${checkboxChecked} onclick="handleCheck(this)"> ${groupItems[i]}</li>`;
+            if (currentItem < groupItems.length) {
+                const checkboxChecked = checkedState[currentGroup + '-' + currentItem] ? 'checked' : '';
+                checklist.innerHTML = `<li><input type="checkbox" ${checkboxChecked} onclick="handleCheck(this)"> ${groupItems[currentItem]}</li>`;
+            } else {
+                moveToNextGroup();
             }
-            checklist.innerHTML = checklistHtml;
         }
 
         updateChecklist();
