@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Robot Pre-Match Checklist</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500&family=Roboto:wght@500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            max-width: 500px;
+            margin: auto;
+            padding: 30px;
+            background: linear-gradient(135deg, #3F5D7A, #66C2A1) fixed; 
+            color: #fff;
+            border-radius: 12px;
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+            height: auto; /* Ensure the body height stretches the full viewport */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* Keep the content at the top */
+        }
+
+        h2 {
+            text-align: center;
+            font-family: 'Roboto', sans-serif;
+            font-size: 40px;
+            margin-bottom: 25px;
+            color: #A8D9C8; /* Light teal for heading */
+        }
+
+        .checklist-container {
+            text-align: center;
+            flex-grow: 1; /* Allow the checklist container to expand and fill the remaining space */
+        }
+
+        .checklist {
+            list-style-type: none;
+            padding: 0;
+            margin: 30px 0;
+        }
+
+        .checklist li {
+            margin: 25px 0;
+            opacity: 1;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .checklist input {
+            margin-right: 20px;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+        }
+
+        .checklist.swiped {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            margin-top: 25px;
+            background-color: #2A3E56; /* Darker blue for buttons */
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            border-radius: 6px;
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background-color: #1D2A3D; /* Even darker blue on hover */
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background-color: #fff;
+            border-radius: 12px;
+            margin: 15px 0;
+            box-shadow: inset 0px 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: #28567E; /* Deep blue for progress */
+            width: 0%;
+            border-radius: 12px;
+            transition: width 0.3s ease;
+        }
+
+        .percent {
+            font-weight: bold;
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #A8D9C8; /* Lighter teal for percent text */
+        }
+
+        .unchecked-list {
+            margin-top: 40px;
+            font-weight: bold;
+            font-size: 24px;
+            color: #FA2A55  ; /* Lighter blue for unchecked items */
+        }
+
+        .end-screen {
+            display: none;
+            text-align: center;
+            padding: 20px; /* Add some padding to the end screen */
+            overflow-y: auto; /* Add a vertical scrollbar if needed */
+        }
+
+        .end-screen h3 {
+            font-size: 35px;
+            font-family: 'Roboto', sans-serif;
+            color: #A8D9C8; /* Lighter teal for end message */
+        }
+
+        .end-screen p {
+            font-size: 22px;
+            color: #A8D9C8;
+        }
+
+        .unchecked-items ol {
+            list-style-type: decimal;
+            margin-left: 30px;
+            font-size: 24px;
+            color: #FA2A55 ; /* Lighter blue for unchecked items list */
+        }
+
+        .group-header {
+            font-size: 26px;
+            margin-top: 30px;
+            text-decoration: underline;
+            color: #A8D9C8; /* Light teal for group header */
+        }
+
+        .battery-prompt {
+            font-size: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Robot Pre-Match Checklist</h2>
+
+    <div class="progress-bar">
+        <div class="progress-bar-fill" id="progress-bar"></div>
+    </div>
+
+    <div class="percent" id="percent">0%</div>
+
+    <div class="checklist-container">
+        <div id="group-header" class="group-header"></div>
+        <ul class="checklist" id="checklist">
+            <li><input type="checkbox" onclick="handleCheck(this)"> Battery secured</li>
+        </ul>
+    </div>
+
+    <button onclick="resetChecklist()">Reset Checklist</button>
+    <button id="back-button" onclick="goBack()">Back</button>
+    <button id="next-button" onclick="goNext()">Next</button>
+
+    <div id="message" style="display: none; text-align: center; margin-top: 25px;"></div>
+    <div id="battery-prompt" class="battery-prompt" style="display: none; text-align: center; margin-top: 25px;"></div>
+
+    <div class="end-screen" id="end-screen">
+        <h3 id="final-message"></h3>
+        <div id="final-progress"></div>
+        <div id="final-battery-number"></div>
+        <div id="final-unchecked-items" class="unchecked-list"></div>
+    </div>
+
+    <script>
+        const checklistGroups = {
+            "Drive": [
+                " Swerve modules tightened", 
+                " Swerve wheels tightened, ",
+                " Wheels cleared of carpet",
+                " Drive works (Joystick L)", 
+                " Turn works (Joystick R)", 
+                " Drive bolts"
+            ],
+            "Electrical": [
+                " CANivore CAN bus works", 
+                " RIO CAN bus works", 
+                " RIO is powered, has cover ON",
+                " USB in RIO",
+                " Pigeon, CANivore blink YELLOW", 
+                " CANDI blinks YELLOW", 
+                " All motors blink YELLOW", 
+                " All CANcoders blink GREEN", 
+                " LaserCAN blinks GREEN", 
+                " Hall effect sensor has power", 
+                " RSL is ON and VISIBLE", 
+                " Wires, snake ziptied down/hot glued", 
+                " All wires clear of moving parts", 
+                " Radio is ON (connect test)", 
+                " Ethernet cables attached properly",
+                " PDP Panel bolted in", 
+                " Polycarb cover ziptied in", 
+                " Limelight blinks oscillating up down"
+            ],
+            "In-N-Outtake": [
+                " Bearings in", 
+                " Belts all attached (pulleys, Kraken)",
+                " Kraken plate bolts", 
+                " E-clips", 
+                " Intake tape"
+            ],
+            "Climber": [
+                " Climber chain tensioned", 
+                " Jam nuts (C)", 
+                " Gearbox tighten", 
+                " Correct starting orientation"
+            ],
+            "Elevator": [
+                " Dyneema tensioned", 
+                " Elevator chain tensioned", 
+                " Jam nuts (E)", 
+                " Chain plate tightened", 
+                " Crossbar is secure and level", 
+                " Stages ascend properly"
+            ],
+            "Driver Station": [
+                " Laptop is charging/charged", 
+                " All apps closed, screen brightness on max", 
+                " Laptop battery on performance mode", 
+                " Wifi, Firewall are OFF", 
+                " Both controllers work", 
+                " Turn ON Xbox controllers!", 
+                " Check limelights' settings",
+                " Auto selected", 
+                " Preload"
+            ],
+            "Auxiliary": [
+                " Bumper Colors", 
+                " Bumpers tightened", 
+                " Zip tie battery", 
+                " Handles OFF robot", 
+                " Subsystems are stowed and ready to go", 
+                " Drive Team is excited and ready! :)",
+            ]
+        };
+
+        let currentGroup = Object.keys(checklistGroups)[0];
+        let currentItem = 0;
+        let checkedItems = 0;
+        let totalItemsCount = Object.values(checklistGroups).flat().length;
+        let checkedState = {};
+        let batteryNumber;
+
+        function updateProgressBar() {
+            const progressBarFill = document.getElementById('progress-bar');
+            const progressPercentage = (checkedItems / totalItemsCount) * 100;
+            progressBarFill.style.width = `${Math.min(progressPercentage, 100)}%`;
+            document.getElementById('percent').textContent = `${Math.round(Math.min(progressPercentage, 100))}%`;
+        }
+
+        function handleCheck(checkbox) {
+            if (checkbox.checked) {
+                checkedItems++;
+                checkedState[currentGroup + '-' + currentItem] = true;
+                
+                const listItem = checkbox.parentElement;
+                listItem.classList.add('swiped');
+                
+                setTimeout(() => {
+                    currentItem++;
+                    if (currentItem < checklistGroups[currentGroup].length) {
+                        updateChecklist();
+                    } else {
+                        moveToNextGroup();
+                    }
+                }, 300);
+            } else {
+                checkedItems--;
+                checkedState[currentGroup + '-' + currentItem] = false;
+            }
+            
+            updateProgressBar();
+        }   
+
+        function moveToNextGroup() {
+            const groups = Object.keys(checklistGroups);
+            const currentGroupIndex = groups.indexOf(currentGroup);
+            if (currentGroupIndex < groups.length - 1) {
+                currentGroup = groups[currentGroupIndex + 1];
+                currentItem = 0;
+                updateChecklist();
+            } else {
+                promptForBatteryNumber();
+            }
+        }
+
+        function promptForBatteryNumber() {
+            document.getElementById('group-header').style.display = 'none';
+            document.getElementById('checklist').style.display = 'none';
+            document.getElementById('percent').style.display = 'none';
+            document.getElementById('message').style.display = 'none';
+            document.getElementById('back-button').style.display = 'none'; // Hide the back button on the end screen
+            document.getElementById('next-button').style.display = 'none'; // Hide the next button on the end screen
+
+            const batteryPrompt = document.getElementById('battery-prompt');
+            batteryPrompt.style.display = 'block';
+            batteryPrompt.innerHTML = '<p class="battery-prompt">Please enter the battery number:</p><input id="battery-input" type="number" inputmode="numeric"><button onclick="showEndScreen()">Submit</button><button onclick="goBackFromBatteryPrompt()">Back</button>';
+        }
+
+        function showEndScreen() {
+            const batteryInput = document.getElementById('battery-input');
+            batteryNumber = batteryInput.value;
+
+            const endScreen = document.getElementById('end-screen');
+            endScreen.style.display = 'block';
+
+            const finalMessage = document.getElementById('final-message');
+            finalMessage.textContent = "You've completed the checklist!";
+
+            const finalProgress = document.getElementById('final-progress');
+            finalProgress.innerHTML = `<strong>Progress: ${Math.round((checkedItems / totalItemsCount) * 100)}%</strong>`;
+
+            const finalBatteryNumber = document.getElementById('final-battery-number');
+            finalBatteryNumber.innerHTML = `<strong>Battery Number: ${batteryNumber}</strong>`;
+
+            const finalUncheckedItems = document.getElementById('final-unchecked-items');
+            const uncheckedItems = Object.values(checklistGroups).flat().filter((item, index) => {
+                const key = Object.keys(checklistGroups).find(key => checklistGroups[key].includes(item));
+                const itemIndex = checklistGroups[key].indexOf(item);
+                return !checkedState[`${key}-${itemIndex}`];
+            });
+            if (uncheckedItems.length > 0) {
+                finalUncheckedItems.innerHTML = `<strong>Unchecked Items:</strong><ol>${uncheckedItems.map(item => `<li>${item}</li>`).join('')}</ol>`;
+            } else {
+                finalUncheckedItems.innerHTML = `<strong>No items were left unchecked.</strong>`;
+            }
+
+            document.getElementById('battery-prompt').style.display = 'none';
+        }
+
+        function resetChecklist() {
+            checkedItems = 0;
+            checkedState = {};
+            currentGroup = Object.keys(checklistGroups)[0];
+            currentItem = 0;
+            
+            // Show the UI again
+            document.getElementById('end-screen').style.display = 'none';
+            document.getElementById('group-header').style.display = 'block';
+            document.getElementById('checklist').style.display = 'block';
+            document.getElementById('percent').style.display = 'block';
+            document.getElementById('back-button').style.display = 'block';
+            document.getElementById('next-button').style.display = 'block';
+            document.getElementById('message').style.display = 'none';
+            document.getElementById('battery-prompt').style.display = 'none';
+            
+            updateChecklist();
+            updateProgressBar();
+        }
+
+        function goBack() {
+            if (currentItem > 0) {
+                currentItem--;
+                updateChecklist();
+            } else {
+                const groups = Object.keys(checklistGroups);
+                const currentGroupIndex = groups.indexOf(currentGroup);
+                if (currentGroupIndex > 0) {
+                    currentGroup = groups[currentGroupIndex - 1];
+                    currentItem = checklistGroups[currentGroup].length - 1;
+                    updateChecklist();
+                }
+            }
+        }
+
+        function goBackFromBatteryPrompt() {
+            document.getElementById('battery-prompt').style.display = 'none';
+            document.getElementById('group-header').style.display = 'block';
+            document.getElementById('checklist').style.display = 'block';
+            document.getElementById('percent').style.display = 'block';
+            document.getElementById('back-button').style.display = 'block';
+            document.getElementById('next-button').style.display = 'block';
+            document.getElementById('message').style.display = 'none';
+
+            const groups = Object.keys(checklistGroups);
+            const currentGroupIndex = groups.indexOf(currentGroup);
+            if (currentItem > 0) {
+                currentItem--;
+                updateChecklist();
+            } else if (currentGroupIndex > 0) {
+                currentGroup = groups[currentGroupIndex - 1];
+                currentItem = checklistGroups[currentGroup].length - 1;
+                updateChecklist();
+            }
+        }
+
+        function goNext() {
+            if (currentItem < checklistGroups[currentGroup].length) {
+                currentItem++;
+                updateChecklist();
+            } else {
+                moveToNextGroup();
+            }
+        }
+
+        function updateChecklist() {
+            const checklist = document.getElementById('checklist');
+            const groupHeader = document.getElementById('group-header');
+            const groupItems = checklistGroups[currentGroup];
+            
+            groupHeader.textContent = currentGroup;
+
+            if (currentItem < groupItems.length) {
+                const checkboxChecked = checkedState[currentGroup + '-' + currentItem] ? 'checked' : '';
+                checklist.innerHTML = `<li><input type="checkbox" ${checkboxChecked} onclick="handleCheck(this)"> ${groupItems[currentItem]}</li>`;
+            } else {
+                moveToNextGroup();
+            }
+        }
+
+        updateChecklist();
+    </script>
+
+</body>
+</html>
