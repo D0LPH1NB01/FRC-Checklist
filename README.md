@@ -25,4 +25,4 @@ Designed for use on tablets, laptops, or pit computers — no backend or interne
 
 - To use on tablet or iphone, download an HTML reader and paste the HTML code into the reader.
 - To use on computer, it's best to use jsfiddle.net or CodePen.io. Opening about:blank and modifying the page with inspect doesn't work because the font's can't be imported
-- To update checklist items, just update the '''checklistGroups''' object and items within it.
+- To update checklist items, just update the ```checklistGroups``` object and items within it.
